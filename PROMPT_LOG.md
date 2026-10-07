@@ -5,7 +5,7 @@
 **Student Name:** David Benjo
 **Project Title:** Boom Snake
 **Repository URL:** https://github.com/dbenjo-glitch/github-game-ame-294
-**Itch.io URL (Optional Bonus):** Not published
+**Itch.io URL (Optional Bonus):** https://dbenjo-glitch.itch.io/boom-snake
 
 ---
 
@@ -204,6 +204,22 @@ A scripted test set a name, checked the clock and board froze while paused, resu
 ### 2.9 Cover Image
 
 > Lets create a cover image for the game, how about a snake eating a bomb on a minesweeper like field, and then BOOM SNAKE written using snakes, and the O's are bombs
+
+Follow-up after seeing the first version:
+
+> i was also wondering if you could change the head of the snake in the cover art to something better and less pacman like, im thinking more of kepe the basic head we used for the actual game the one with only th eyes, but then add a long snake tounge that wraps around the bomb oming form the snake
+
+* **Human decision:** Claude's first cover gave the snake a big open-mouthed head. The student rejected it as too much like Pac-Man and asked for the game's own plain head with two eyes, plus a long tongue wrapping the bomb. The cover was redrawn that way.
+
+### 2.10 Itch.io Release
+
+> lets do the itch.io part, also check with the rubric and the instructions that we did everything right, go deep go long
+
+> fill out itch.io to publish the game, have it ready to publish and then do it
+
+* **Outcome:** published as a browser-playable HTML5 game at https://dbenjo-glitch.itch.io/boom-snake with the cover image, a 480x720 embed that is marked mobile friendly, a fullscreen button, and a description covering how to play, controls and modes.
+* **Friction:** Itch.io rejected the first two uploads with "Please verify your email address before uploading a file." The student verified his email and the upload then succeeded. Signing in and verifying were the student's steps, since an agent should not handle passwords.
+* **Disclosure:** the page's AI generation question is answered Yes, with graphics, sounds, text and code all ticked.
 
 * **Outcome:** Claude drew the cover with a Python script, with no image generator involved: the title in a pixel font built from snake segments with bombs for the two O's, above a minefield where a snake is about to bite a bomb. It is `assets/cover.png` and sits at the top of the README. The concept and layout are the student's.
 

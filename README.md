@@ -7,7 +7,8 @@
 AME 294: Games and AI, Portfolio Game 2 (Vibe-Coded Browser Game)
 Student: David Benjo
 
-- **Play in browser:** https://dbenjo-glitch.github.io/github-game-ame-294/
+- **Play on Itch.io:** https://dbenjo-glitch.itch.io/boom-snake
+- **Play on GitHub Pages:** https://dbenjo-glitch.github.io/github-game-ame-294/
 - **Prompt log:** [PROMPT_LOG.md](PROMPT_LOG.md)
 
 ## How to play
