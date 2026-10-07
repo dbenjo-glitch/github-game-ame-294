@@ -168,12 +168,28 @@ Prompt template used for every sound (structure drafted with Claude, wording cho
 
 ### 3.1 Sound 1: Reward SFX (redemption cleared)
 
-* **Tool:** ElevenLabs Sound Effects
-* **Exact Prompt:** [TBD]
-* **Settings (duration, prompt influence):** [TBD]
-* **Iterations / what changed between takes:** [TBD]
+* **Tool:** ElevenLabs Sound Effects (Sound Effects v2)
 * **Final file:** `assets/audio/redeem.mp3`
-* **Trigger in game:** Snake apple target reached, as the hole opens in the wall.
+* **Trigger in game:** Snake apple target reached, as the hole opens in the wall and the snake escapes back to Minesweeper.
+
+**Human decision:** Claude's starter draft was a chiptune chime arpeggio with a whoosh. The student wrote his own prompt from scratch, with a rhythmic "bump bump bump" figure and a snake sound to tie the reward to the character. Three rounds, twelve takes, all in the student's exact wording from his ElevenLabs history.
+
+**Round 1** (four takes, 1.0 second each):
+
+> medium speed ascending, trumpet synth, bump bump bump pattern followed by a snake sound, happy, arcade no additional sound
+
+**Round 2** (four takes, 1.8 seconds each). Instrument changed from "trumpet synth" to "jazz synth with reverb", and the duration raised so the pattern and the snake sound both fit:
+
+> medium speed ascending, jazz synth with reverb, bump bump bump pattern followed by a snake sound, happy, arcade no additional sound
+
+**Round 3** (four takes, 1.8 seconds each): the same prompt run again for more options.
+
+* **Chosen:** take #2 from the "jazz synth" prompt, 1.76 seconds.
+
+Post-processing (done by Claude with ffmpeg, no AI generation):
+
+* **Abrupt ending fixed:** the take was still at -6 dB when the file stopped, which would have been heard as a hard cut. A 0.25 second fade-out was added.
+* Gain lowered 1.5 dB (the peak was -0.9 dB, with no clipping) so it sits with the other effects, and the WAV was converted to MP3.
 
 ### 3.2 Sound 2: Damage SFX (two sounds)
 
