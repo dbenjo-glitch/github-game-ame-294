@@ -89,6 +89,67 @@ const UI = {
     };
   },
 
+  // A pop-up with the music and game sound sliders plus any buttons the
+  // caller wants under them. The start screen uses it as SOUND SETTINGS and
+  // the two game scenes use it as the PAUSED menu. Every button closes the
+  // panel first, then runs its own action. Returns { close }.
+  soundPanel(scene, title, buttons) {
+    // Opening a panel is a user gesture, so audio can be unlocked here. That
+    // lets the player hear the sliders even before the game has started.
+    SFX.unlock(scene.game);
+    SFX.startMusic(scene.game);
+
+    const W = CONFIG.WIDTH;
+    const H = CONFIG.HEIGHT;
+    const C = CONFIG.COLORS;
+    const D = 100;                               // above everything else in the scene
+    const h = 274 + 56 * buttons.length;
+    const top = H / 2 - h / 2;
+    const parts = [];
+    const keep = (o) => { parts.push(o); return o; };
+
+    // Dark backdrop that also swallows clicks meant for whatever is underneath.
+    keep(scene.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.72).setDepth(D).setInteractive());
+    keep(scene.add.rectangle(W / 2, H / 2, 420, h, C.panel).setStrokeStyle(3, C.accent).setDepth(D + 1));
+    keep(this.text(scene, W / 2, top + 35, title, 22, C.textAccent).setDepth(D + 2));
+
+    const pct = (v) => Math.round(v * 100) + '%';
+    const sx = 70;
+    const sw = W - 140;
+
+    keep(this.text(scene, sx, top + 83, 'MUSIC', 15, C.text, 0, 0.5).setDepth(D + 2));
+    const musicPct = keep(this.text(scene, sx + sw, top + 83, pct(State.musicLevel), 15, C.textAccent, 1, 0.5).setDepth(D + 2));
+    const musicSlider = this.slider(scene, sx, top + 117, sw, State.musicLevel, (v) => {
+      SFX.setMusicLevel(v);
+      musicPct.setText(pct(v));
+    }, () => State.save(), D + 2);
+
+    keep(this.text(scene, sx, top + 173, 'GAME SOUNDS', 15, C.text, 0, 0.5).setDepth(D + 2));
+    const sfxPct = keep(this.text(scene, sx + sw, top + 173, pct(State.sfxLevel), 15, C.textAccent, 1, 0.5).setDepth(D + 2));
+    const sfxSlider = this.slider(scene, sx, top + 207, sw, State.sfxLevel, (v) => {
+      SFX.setSfxLevel(v);
+      sfxPct.setText(pct(v));
+    }, () => {
+      State.save();
+      SFX.play(scene.game, 'thump');             // a quick sample at the new level
+    }, D + 2);
+    keep(this.text(scene, W / 2, top + 243, 'Let go of the slider to hear a sample.', 12, C.textDim).setDepth(D + 2));
+
+    const close = () => {
+      musicSlider.destroy();
+      sfxSlider.destroy();
+      parts.forEach(o => o.destroy());
+    };
+    buttons.forEach((b, i) => {
+      const btn = this.button(scene, W / 2, top + 289 + i * 56, 250, 46, b.label, () => { close(); b.onClick(); }, b.fill);
+      btn.bg.setDepth(D + 2);
+      btn.label.setDepth(D + 3);
+      keep(btn.bg);
+      keep(btn.label);
+    });
+    return { close };
+  },
+
   // Where the current board sits on screen. The board always fills the same
   // square, so the tile size depends on how many tiles the difficulty uses.
   grid() {

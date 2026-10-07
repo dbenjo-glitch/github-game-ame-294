@@ -9,6 +9,8 @@ const State = {
   ownedSkins: ['green'],
   selectedSkin: 'green',
   difficulty: CONFIG.DEFAULT_DIFFICULTY,
+  playerName: 'PLAYER',
+  leaderboard: {},                          // best wins per difficulty, kept in this browser
   musicLevel: CONFIG.DEFAULT_MUSIC_LEVEL,   // 0 to 1, set in the SOUND panel
   sfxLevel: CONFIG.DEFAULT_SFX_LEVEL,       // 0 to 1, set in the SOUND panel
 
@@ -30,6 +32,39 @@ const State = {
   diff() {
     return CONFIG.DIFFICULTIES.find(d => d.id === this.difficulty) ||
            CONFIG.DIFFICULTIES.find(d => d.id === CONFIG.DEFAULT_DIFFICULTY);
+  },
+
+  // Names are kept short and simple so they always fit on screen.
+  setName(raw) {
+    const clean = String(raw || '').toUpperCase().replace(/[^A-Z0-9 ]/g, '').trim().slice(0, 10);
+    if (!clean) return false;
+    this.playerName = clean;
+    this.save();
+    return true;
+  },
+
+  // Fastest wins first. Returns the top 5 for one difficulty.
+  scores(difficultyId) {
+    return (this.leaderboard[difficultyId] || []).slice();
+  },
+
+  // Adds the current run to the leaderboard for its difficulty. Returns the
+  // rank it earned (1 = best time) or 0 if it did not make the top 5.
+  recordWin() {
+    const id = this.run.difficulty;
+    const entry = {
+      name: this.playerName,
+      timeMs: Math.round(this.run.elapsedMs),
+      score: this.run.score,
+      used: this.run.bombsHit
+    };
+    const list = this.scores(id);
+    list.push(entry);
+    list.sort((a, b) => a.timeMs - b.timeMs);
+    const top = list.slice(0, 5);
+    this.leaderboard[id] = top;
+    this.save();
+    return top.indexOf(entry) + 1;
   },
 
   setDifficulty(id) {
@@ -86,7 +121,9 @@ const State = {
         selectedSkin: this.selectedSkin,
         difficulty: this.difficulty,
         musicLevel: this.musicLevel,
-        sfxLevel: this.sfxLevel
+        sfxLevel: this.sfxLevel,
+        playerName: this.playerName,
+        leaderboard: this.leaderboard
       }));
     } catch (e) { /* play on without saving */ }
   },
@@ -102,6 +139,8 @@ const State = {
       if (CONFIG.DIFFICULTIES.some(d => d.id === data.difficulty)) this.difficulty = data.difficulty;
       if (typeof data.musicLevel === 'number') this.musicLevel = Math.min(1, Math.max(0, data.musicLevel));
       if (typeof data.sfxLevel === 'number') this.sfxLevel = Math.min(1, Math.max(0, data.sfxLevel));
+      if (typeof data.playerName === 'string' && data.playerName) this.playerName = data.playerName.slice(0, 10);
+      if (data.leaderboard && typeof data.leaderboard === 'object') this.leaderboard = data.leaderboard;
     } catch (e) { /* start fresh */ }
   }
 };
