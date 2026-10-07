@@ -7,12 +7,26 @@
 //   womp.mp3     END     loss sting, chained after thump or the final boom
 //   redeem.mp3   REWARD  apple target reached, the hole opens
 //   victory.mp3  END     board cleared
+//   music.ogg    background loop, quiet, under everything else (music.mp3 fallback)
 
 const SFX = {
   KEYS: ['boom', 'thump', 'womp', 'redeem', 'victory'],
 
+  music: null,
+
   preload(scene) {
     this.KEYS.forEach(key => scene.load.audio(key, 'assets/audio/' + key + '.mp3'));
+    // OGG first because it loops without a gap; MP3 is the fallback for
+    // browsers that cannot play OGG.
+    scene.load.audio('music', ['assets/audio/music.ogg', 'assets/audio/music.mp3']);
+  },
+
+  // Starts the background loop once. The sound manager belongs to the game,
+  // not to a scene, so the music keeps playing across scene changes.
+  startMusic(game) {
+    if (this.music || !this.has(game, 'music')) return;
+    this.music = game.sound.add('music', { loop: true, volume: CONFIG.VOLUME.music });
+    this.music.play();
   },
 
   has(game, key) {

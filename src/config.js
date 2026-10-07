@@ -48,7 +48,8 @@ const CONFIG = {
     thump: 0.8,
     womp: 0.6,
     redeem: 0.6,
-    victory: 0.6
+    victory: 0.6,
+    music: 0.22          // background loop sits well under the effects
   },
 
   // ---- Palette ----
