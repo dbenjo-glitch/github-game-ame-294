@@ -58,11 +58,25 @@ const UI = {
     return scene.add.container(x, y, [g]);
   },
 
+  // Where the current board sits on screen. The board always fills the same
+  // square, so the tile size depends on how many tiles the difficulty uses.
+  grid() {
+    const size = State.run.board.size;
+    const tile = Math.floor(CONFIG.GRID_PIXELS / size);
+    return {
+      size,
+      tile,
+      x: Math.round((CONFIG.WIDTH - tile * size) / 2),
+      y: CONFIG.GRID_Y
+    };
+  },
+
   // Center of a Minesweeper tile in screen pixels.
   tileCenter(col, row) {
+    const g = this.grid();
     return {
-      x: CONFIG.GRID_X + col * CONFIG.TILE + CONFIG.TILE / 2,
-      y: CONFIG.GRID_Y + row * CONFIG.TILE + CONFIG.TILE / 2
+      x: g.x + col * g.tile + g.tile / 2,
+      y: g.y + row * g.tile + g.tile / 2
     };
   }
 };

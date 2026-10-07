@@ -8,17 +8,32 @@ const State = {
   coins: 0,
   ownedSkins: ['green'],
   selectedSkin: 'green',
+  difficulty: CONFIG.DEFAULT_DIFFICULTY,
 
   // ---- The current run. Reset by newRun(). ----
   run: null,
 
   newRun() {
+    const d = this.diff();
     this.run = {
+      difficulty: d.id,
       score: 0,
       bombsHit: 0,       // also the number of redemptions used
       elapsedMs: 0,      // total play time across Minesweeper and Snake
-      board: Board.create(CONFIG.GRID_SIZE, CONFIG.MINE_COUNT)
+      board: Board.create(d.size, d.mines)
     };
+  },
+
+  // The settings for the selected difficulty (board size, mines, snake speed).
+  diff() {
+    return CONFIG.DIFFICULTIES.find(d => d.id === this.difficulty) ||
+           CONFIG.DIFFICULTIES.find(d => d.id === CONFIG.DEFAULT_DIFFICULTY);
+  },
+
+  setDifficulty(id) {
+    if (!CONFIG.DIFFICULTIES.some(d => d.id === id)) return;
+    this.difficulty = id;
+    this.save();
   },
 
   redemptionsLeft() {
@@ -66,7 +81,8 @@ const State = {
       localStorage.setItem('msr_save', JSON.stringify({
         coins: this.coins,
         ownedSkins: this.ownedSkins,
-        selectedSkin: this.selectedSkin
+        selectedSkin: this.selectedSkin,
+        difficulty: this.difficulty
       }));
     } catch (e) { /* play on without saving */ }
   },
@@ -79,6 +95,7 @@ const State = {
       if (typeof data.coins === 'number') this.coins = data.coins;
       if (Array.isArray(data.ownedSkins)) this.ownedSkins = data.ownedSkins;
       if (typeof data.selectedSkin === 'string') this.selectedSkin = data.selectedSkin;
+      if (CONFIG.DIFFICULTIES.some(d => d.id === data.difficulty)) this.difficulty = data.difficulty;
     } catch (e) { /* start fresh */ }
   }
 };

@@ -9,11 +9,21 @@ const CONFIG = {
   WIDTH: 480,
   HEIGHT: 720,
 
+  // ---- Difficulty ----
+  // Harder modes use a bigger board with denser mines and a faster snake.
+  // snakeTick is the time between snake steps in milliseconds (lower = faster).
+  DIFFICULTIES: [
+    { id: 'easy',   short: 'EASY',   name: 'EASY',       size: 8,  mines: 8,  snakeTick: 150, snakeLabel: 'slow' },
+    { id: 'medium', short: 'MEDIUM', name: 'MEDIUM',     size: 8,  mines: 10, snakeTick: 125, snakeLabel: 'normal' },
+    { id: 'hard',   short: 'HARD',   name: 'HARD',       size: 10, mines: 18, snakeTick: 105, snakeLabel: 'fast' },
+    { id: 'ultra',  short: 'ULTRA',  name: 'ULTRA HARD', size: 12, mines: 30, snakeTick: 90,  snakeLabel: 'very fast' }
+  ],
+  DEFAULT_DIFFICULTY: 'medium',
+
   // ---- Minesweeper ----
-  GRID_SIZE: 8,          // 8 x 8 board
-  MINE_COUNT: 10,
-  TILE: 54,              // tile size in pixels
-  GRID_X: 24,            // top-left corner of the board
+  // The board always fills the same square on screen; tiles shrink as the
+  // board grows (8x8 = 54px tiles, 10x10 = 43px, 12x12 = 36px).
+  GRID_PIXELS: 432,
   GRID_Y: 150,
   POINTS_PER_TILE: 10,   // REWARD: points for each safe tile revealed
 
@@ -28,8 +38,10 @@ const CONFIG = {
     X: 24,               // top-left corner of the play field
     Y: 112,
     WALL: 10,            // wall thickness in pixels
-    TICK_MS: 125,        // time between snake steps (lower = faster)
-    EXIT_TICK_MS: 45     // speed while escaping through the hole
+    SPEEDUP_EVERY_MS: 5000,  // every 5 seconds spent in Snake...
+    SPEEDUP_FACTOR: 1.05,    // ...the snake gets 5% faster (it compounds)
+    MIN_TICK_MS: 55,         // speed ceiling so the game stays humanly playable
+    EXIT_TICK_MS: 45         // speed while escaping through the hole
   },
 
   // ---- Coins and snake colors ----
