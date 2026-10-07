@@ -15,8 +15,8 @@
 | :---- | :---- | :---- | :---- |
 | **Code Scaffolding Agent** | Claude (Cowork, running in the Chrome side panel) | claude-opus-5-5 | Project structure, Phaser 3 setup, all five scenes |
 | **Logic & Debugging Agent** | Claude (Cowork) | claude-opus-5-5 | Mechanics, state handling, automated browser playthroughs, bug fixes |
-| **Audio / SFX Generator** | ElevenLabs Sound Effects (paid plan) | [TBD: model name shown in ElevenLabs] | Five sound effects: boom, thump, womp, redeem, victory |
-| **Music / Atmosphere** | Not used | | |
+| **Audio / SFX Generator** | ElevenLabs Sound Effects (paid plan) | Sound Effects v2 | Five sound effects: boom, thump, womp, redeem, victory |
+| **Music / Atmosphere** | ElevenLabs Sound Effects, then ElevenLabs Chat (creative agent, Alpha) | Sound Effects v2 and Eleven Music v2 | 19 second looping arcade chiptune background track |
 | **Visual Asset Pipeline** | None. All visuals are drawn in code with Phaser shapes | | Tiles, mines, flags, snake, apples, UI |
 
 Cursor was the original plan (it was the Week 5 lab tool). The student switched to Claude before any code was written because neither Cursor, Claude Code nor Codex was set up on his machine.
@@ -121,6 +121,15 @@ The audio behavior was specified in the 2.2 prompt above ("a thump and then a ar
 
 * **Outcome:** the working title "Minesweeper: Redemption" was replaced with the student's title.
 
+### 2.5 Background Music Wiring
+
+> im currently in eleven labs, track down all the prompt used to create take 7, i want to use take 7 as the backroudn track for the game
+
+> now find the prompts it took to make this sound, it first started in soun affects then i moved into chats, then update the prompt logs
+
+* **Outcome:** Claude read the student's ElevenLabs Sound Effects history and Chat thread and reconstructed the full prompt chain (section 3.4).
+* **Implementation Outcome:** `audio.js` gained `SFX.startMusic()`, which loops the track at volume 0.22 so it sits under the effects. It is started from the same click that unlocks audio and is owned by the game's sound manager, so it keeps playing across every scene change. A guard makes sure only one copy ever plays.
+
 ---
 
 ## 3. Generative Audio & Sound Design Prompts
@@ -141,12 +150,30 @@ Prompt template used for every sound (structure drafted with Claude, wording cho
 
 **2a. Bomb hit**
 
-* **Tool:** ElevenLabs Sound Effects
-* **Exact Prompt:** [TBD]
-* **Settings:** [TBD]
-* **Iterations:** [TBD]
+* **Tool:** ElevenLabs Sound Effects (Sound Effects v2)
+* **Exact Prompt:** "Small land mine explosion, retro arcade sound, tight punchy low thump, crackling texture on top, sound fades out, no sudden end"
+* **Settings:** four takes generated, 2.3 seconds each. Take #4 chosen.
 * **Final file:** `assets/audio/boom.mp3`
 * **Trigger in game:** Revealing a mine in Minesweeper.
+
+How the prompt was built. Claude supplied a fill-in template: `[size] [style] explosion, [low-end character], [texture on top], [how it ends], no [exclude]`. The student filled it in and asked about the one slot he did not understand:
+
+> Small, land mine explosion, [low-end character], Crackling texture on top, sound fades out, no sudden end.
+>
+> what should i put for low end charcter, what does that mean?
+
+* Claude explained that "low end" is the bass weight of the sound and offered three options from light to heavy. The student's draft said "small", so the lightest one ("tight punchy low thump") was used.
+* Claude flagged that the draft had no style word, so the result would probably be a realistic explosion that might not match the chiptune music.
+
+> can you add arcade sound in it
+
+* **Human decision:** the student chose to match the music and added "retro arcade sound".
+
+Post-processing (done by Claude with ffmpeg, no AI generation):
+
+* **Latency fix:** the take opened with 0.53 seconds of near silence before the explosion. Left in, the boom would have landed half a second after the click. The lead-in was cut so the sound starts within 4 milliseconds.
+* **Clipping fix:** the peak sat at 0.0 dB with 35 clipped samples. Gain was lowered by 1.5 dB.
+* A 0.12 second fade was added at the end, and the WAV was converted to MP3. Final length 1.75 seconds.
 
 **2b. Snake crash**
 
@@ -177,9 +204,52 @@ Prompt template used for every sound (structure drafted with Claude, wording cho
 * **Final file:** `assets/audio/womp.mp3`
 * **Trigger in game:** Chained after `thump.mp3` on a Snake crash, and after `boom.mp3` on the fourth bomb.
 
-### 3.4 (Optional) Ambient Music / Background Soundscape
+### 3.4 Background Music Loop
 
-Not used.
+* **Final file:** `assets/audio/music.ogg` (with `music.mp3` as a fallback)
+* **Trigger in game:** starts on the "Click or press Space to start" gesture and loops for the whole session.
+
+The track took two tools and four student prompts. Everything in quote blocks is the student's exact wording.
+
+**Stage 1: ElevenLabs Sound Effects.** Prompt box settings: Looping on, Duration auto, Prompt influence 50%.
+
+> Instrumental arcade boss loop. Tense chiptune, 140 BPM. Strong downbeat, no vocals, clean ending that can repeat. slight boom beats ever 70 beats
+
+* Result: four takes of 2.3 seconds each. Take #3 was favorited.
+* Why it was not enough: 2.3 seconds is far too short for a background track, so the student moved to ElevenLabs Chat and uploaded a loop from this batch as a reference.
+
+**Stage 2: ElevenLabs Chat (creative agent).** The agent writes its own generation prompts from what the student asks for. Both are recorded.
+
+Student prompt 1:
+
+> Make it 5 seconds long, with increasing and decreasing pitches, add a set of back round aracade music that goes with it
+
+* Agent's sound effect prompt (Sound Effects v2, Take 1): "Retro chiptune arcade sound, square wave pitch sweeping up and down in repeating rising and falling arpeggios, bright 8-bit tones"
+* Agent's music prompt (Eleven Music v2): "Instrumental arcade chiptune, tense and driving, 140 BPM, square and pulse wave leads, fast arpeggios, punchy 8-bit bass and drums, rising and falling melodic lines"
+* **Two failures:** the first two music generations failed with "There was an unexpected error processing this generation" (not charged). Both used the uploaded loop as a reference.
+* **Recovery:** the agent retried from the text description only ("Arcade chiptune background music, text-prompt only retry") and produced Take 3, a 15 second track. It follows the style of the uploaded loop but is not built from it.
+
+Student prompt 2 (referencing Take 3):
+
+> i liked  just make it so that it can loop and gradually drops back down in pitch so that it doesnt look by having a major pitch change, make it like a 18-20 second loop or so
+
+* Agent's music prompt: "Seamlessly looping instrumental arcade chiptune, tense and driving, 140 BPM, square and pulse wave leads, fast arpeggios, punchy 8-bit bass and drums. Over the final few bars the melody and bass gradually descend in pitch and ease in energy, settling on the same key and groove as the opening so the loop restarts smoothly with no abrupt pitch jump"
+* Result: Takes 4 and 5, 19 seconds each.
+
+Student prompt 3 (referencing Take 4):
+
+> i like this, make it loop seemlessly, the drop is to long and its supposed to drop to around the same level as the beginning, not a lot lower
+
+* Agent's music prompt: "Tighter seamless arcade loop with a short, subtle pitch dip back to the start level. Seamlessly looping instrumental arcade chiptune, tense and driving, 140 BPM, square and pulse wave leads, fast arpeggios, punchy 8-bit bass and drums, steady energy throughout. Only in the last bar the melody dips a small step down, a brief and subtle pitch fall, landing exactly on the starting note, key, and groove of the opening so the end flows straight back into the beginning with no gap or jump"
+* Result: Takes 6 and 7. **The student chose Take 7.**
+* Cost: 3,171 credits for the chat thread.
+
+**Post-processing (done by Claude with ffmpeg, no AI generation):**
+
+* The download was 19.08 seconds with 0.18 seconds of silence at the end, which would have been heard as a hiccup on every loop.
+* It was trimmed to 18.857 seconds, which is exactly 11 bars at 140 BPM, so the loop point lands on a bar line.
+* Exported as OGG (loops without a gap) with an MP3 fallback.
+* Levels: peak -1.0 dB, so no clipping. Played at volume 0.22 against 0.6 to 0.8 for the effects.
 
 ---
 
@@ -190,7 +260,7 @@ Not used.
 * **Console error:** `Failed to load resource: the server responded with a status of 404 (File not found)`, five times on every load, one per sound file.
 * **Cause:** the code was written before the ElevenLabs files existed, so `assets/audio/` was empty.
 * **Why it did not break the game:** in Phaser, playing a sound key that is missing from the cache throws an error. Claude anticipated this and routed every sound through a helper that checks `cache.audio.exists(key)` first, so the game stayed fully playable in silence.
-* **Resolution:** [TBD: confirm the errors clear once the five files are added]
+* **Resolution so far:** with the music file added and placeholder tones standing in for the five effects, a scripted playthrough showed zero console errors and every trigger firing in the right order: boom on a bomb, redeem on escape, thump then womp on a Snake crash, boom then womp on the fourth bomb, victory on a win. [TBD: confirm again with the real five files]
 
 ### Incident 2: Automated playthrough reported the snake dying with 0 apples
 
@@ -204,7 +274,18 @@ Not used.
 * **Symptom:** browsers block Web Audio file loading on `file://` pages, so double-clicking `index.html` would have produced a silent game.
 * **Resolution:** `main.js` uses Web Audio whenever the game is served over http(s) (GitHub Pages, Itch.io) and falls back to HTML5 audio only for `file://`. Both paths were tested.
 
-### Incident 4: [TBD from the student's own playtest]
+### Incident 4: ElevenLabs music generation failed twice
+
+* **Error:** "Generation failed. There was an unexpected error processing this generation. Please try again." It happened twice in a row in ElevenLabs Chat.
+* **Cause:** both attempts used the student's uploaded 2.3 second loop as an audio reference.
+* **Recovery:** the third attempt dropped the reference and generated from the text description alone, which worked. Full chain in section 3.4.
+
+### Incident 5: The background loop had a gap
+
+* **Symptom:** the chosen take ended with 0.18 seconds of silence, and MP3 files add a little padding of their own, so a straight loop would stutter every 19 seconds.
+* **Resolution:** trimmed to exactly 11 bars (18.857 seconds) and shipped as OGG with an MP3 fallback. See section 3.4.
+
+### Incident 6: [TBD from the student's own playtest]
 
 ---
 
@@ -223,6 +304,7 @@ Not used.
 | thump.mp3 | SFX | ElevenLabs Sound Effects | Same as above |
 | victory.mp3 | SFX | ElevenLabs Sound Effects | Same as above |
 | womp.mp3 | SFX | ElevenLabs Sound Effects | Same as above |
+| music.ogg, music.mp3 | Background loop | ElevenLabs Chat, Eleven Music v2 (Take 7), trimmed with ffmpeg | Same as above |
 | Phaser 3.90.0 | Game framework | phaser.io | MIT License |
 | Game code | JavaScript | Written with Claude (Cowork), directed by the student | Student's own work |
 | Visuals | Code-drawn shapes | No external image assets | Not applicable |
