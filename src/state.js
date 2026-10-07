@@ -9,6 +9,8 @@ const State = {
   ownedSkins: ['green'],
   selectedSkin: 'green',
   difficulty: CONFIG.DEFAULT_DIFFICULTY,
+  musicLevel: CONFIG.DEFAULT_MUSIC_LEVEL,   // 0 to 1, set in the SOUND panel
+  sfxLevel: CONFIG.DEFAULT_SFX_LEVEL,       // 0 to 1, set in the SOUND panel
 
   // ---- The current run. Reset by newRun(). ----
   run: null,
@@ -82,7 +84,9 @@ const State = {
         coins: this.coins,
         ownedSkins: this.ownedSkins,
         selectedSkin: this.selectedSkin,
-        difficulty: this.difficulty
+        difficulty: this.difficulty,
+        musicLevel: this.musicLevel,
+        sfxLevel: this.sfxLevel
       }));
     } catch (e) { /* play on without saving */ }
   },
@@ -96,6 +100,8 @@ const State = {
       if (Array.isArray(data.ownedSkins)) this.ownedSkins = data.ownedSkins;
       if (typeof data.selectedSkin === 'string') this.selectedSkin = data.selectedSkin;
       if (CONFIG.DIFFICULTIES.some(d => d.id === data.difficulty)) this.difficulty = data.difficulty;
+      if (typeof data.musicLevel === 'number') this.musicLevel = Math.min(1, Math.max(0, data.musicLevel));
+      if (typeof data.sfxLevel === 'number') this.sfxLevel = Math.min(1, Math.max(0, data.sfxLevel));
     } catch (e) { /* start fresh */ }
   }
 };

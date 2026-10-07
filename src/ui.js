@@ -58,6 +58,37 @@ const UI = {
     return scene.add.container(x, y, [g]);
   },
 
+  // A horizontal slider. value is 0 to 1. onChange fires while dragging,
+  // onRelease once when the player lets go. Returns { destroy }.
+  slider(scene, x, y, w, value, onChange, onRelease, depth) {
+    const C = CONFIG.COLORS;
+    const track = scene.add.rectangle(x, y, w, 8, C.tileOpen).setOrigin(0, 0.5).setDepth(depth);
+    const fill = scene.add.rectangle(x, y, w * value, 8, C.accent).setOrigin(0, 0.5).setDepth(depth);
+    const knob = scene.add.circle(x + w * value, y, 13, C.accent).setStrokeStyle(3, 0x0b0d1c).setDepth(depth + 1);
+    // A tall invisible strip so the slider is easy to grab on a phone.
+    const hit = scene.add.rectangle(x - 16, y, w + 32, 46, 0x000000, 0).setOrigin(0, 0.5).setDepth(depth + 2);
+    hit.setInteractive({ useHandCursor: true });
+    let dragging = false;
+    const set = (px) => {
+      const v = Phaser.Math.Clamp((px - x) / w, 0, 1);
+      fill.width = w * v;
+      knob.x = x + w * v;
+      onChange(v);
+    };
+    const move = (p) => { if (dragging) set(p.x); };
+    const up = () => { if (dragging) { dragging = false; if (onRelease) onRelease(); } };
+    hit.on('pointerdown', (p) => { dragging = true; set(p.x); });
+    scene.input.on('pointermove', move);
+    scene.input.on('pointerup', up);
+    return {
+      destroy() {
+        scene.input.off('pointermove', move);
+        scene.input.off('pointerup', up);
+        [track, fill, knob, hit].forEach(o => o.destroy());
+      }
+    };
+  },
+
   // Where the current board sits on screen. The board always fills the same
   // square, so the tile size depends on how many tiles the difficulty uses.
   grid() {

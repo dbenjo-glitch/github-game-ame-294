@@ -63,6 +63,10 @@ const CONFIG = {
     victory: 0.6,
     music: 0.22          // background loop sits well under the effects
   },
+  // Player-adjustable levels (0 to 1) from the SOUND settings panel. At these
+  // defaults the mix above plays exactly as written.
+  DEFAULT_MUSIC_LEVEL: 0.5,
+  DEFAULT_SFX_LEVEL: 0.8,
 
   // ---- Palette ----
   COLORS: {
