@@ -1,5 +1,7 @@
 # Boom Snake
 
+![Boom Snake cover: a snake eating a bomb on a minefield](assets/cover.png)
+
 **Minesweeper with a second chance.** Hit a bomb and you get tunneled into a game of Snake. Eat enough apples and you earn your way back to the exact board you left. Run out of redemptions and it's over.
 
 AME 294: Games and AI, Portfolio Game 2 (Vibe-Coded Browser Game)
@@ -46,6 +48,13 @@ In every mode the snake gets 5% faster for every 5 seconds you spend in Snake, s
 | Reveal | Left-click | Tap |
 | Flag | Right-click, or toggle FLAG MODE (F) | FLAG MODE button, then tap |
 | Steer the snake | Arrow keys or WASD | Swipe, or the on-screen D-pad |
+
+### Pause, sound and leaderboard
+
+- **PAUSE** (or P / Esc) works in both Minesweeper and Snake. The pause menu has Resume, the two sound sliders, and Quit to Menu.
+- **SOUND** on the start screen opens the same two sliders, one for music and one for game sounds. Your levels are saved.
+- **NAME** on the start screen sets the name shown on the leaderboard.
+- **LEADERBOARD** shows the five fastest wins for each difficulty. It is saved in your own browser, so it is a personal best board, not a shared online one.
 
 ### Coins and snake colors
 
@@ -97,10 +106,25 @@ assets/audio/               the five sound effects and the background loop
 
 ## References and inspiration
 
-- **Gameplay:** Google's browser versions of Minesweeper and Snake. Both are simple, web-based and instantly readable, which made them the right pieces to combine.
-- **The twist:** instead of a bomb ending the game, it sends you somewhere else to earn your way back, with the price going up each time.
-- **Target sound style:** retro arcade. Short, punchy, 8-bit flavored effects and a comedic "womp womp womp womp" for losing.
-- **Visual style:** dark arcade palette with code-drawn tiles, in the spirit of the classic number colors.
+**Gameplay references**
+
+- Google's browser versions of Minesweeper and Snake. Both are simple, web-based and instantly readable, which made them the right pieces to combine.
+- The twist is the student's own: instead of a bomb ending the game, it sends you somewhere else to earn your way back, and the price goes up each time (10, 20, then 30 apples).
+
+**Visual moodboard**
+
+- Dark arcade cabinet palette: deep navy background, bright green snake, yellow highlights, red for danger.
+- Classic Minesweeper number colors, brightened for a dark board.
+- Chunky code-drawn shapes instead of sprites, so everything reads clearly on a phone.
+
+**Sonic moodboard and target acoustic style**
+
+- Overall: retro arcade and chiptune, short and punchy, so effects never talk over each other.
+- Music: a tense 140 BPM chiptune loop, like a boss stage, kept quiet under the effects.
+- Damage: a small land mine explosion with a crackle, and a dull heavy bump for the snake hitting a wall.
+- Loss: a playful, sad saxophone game over that fizzles out. Funny, not punishing.
+- Reward: an ascending jazz synth "bump bump bump" with a snake sound, for escaping back to the board.
+- Win: an eager guitar synth jingle ending in a snake slither, timed to the snake eating the mines on the win screen.
 
 ## AI tools used
 
@@ -109,7 +133,7 @@ assets/audio/               the five sound effects and the background loop
 | Code, architecture, testing and debugging | Claude (Cowork), model `claude-opus-5-5` |
 | Sound effects | ElevenLabs Sound Effects v2 (paid plan) |
 | Background music | ElevenLabs Chat with Eleven Music v2 |
-| Visuals | None. Drawn in code. |
+| Visuals and cover image | None. Drawn in code (Phaser shapes in the game, a Python script for the cover). |
 
 The full chronological prompt history, error recovery notes and reflection are in [PROMPT_LOG.md](PROMPT_LOG.md).
 

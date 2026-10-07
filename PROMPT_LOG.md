@@ -159,6 +159,54 @@ The audio behavior was specified in the 2.2 prompt above ("a thump and then a ar
 
 A scripted browser test picked each mode in turn and confirmed the board size, mine count, starting snake speed, the exact 5% step after 5 seconds, the ceiling, a full win on every board size, and that the choice survives a page reload.
 
+### 2.7 Sound Settings Panel
+
+#### Exact Prompt Submitted:
+
+> add a settign button where you can scroll for the music loudness and the game sound loudness
+
+#### Implementation Outcome:
+
+* A SOUND button on the start screen opens a panel with two sliders, one for music and one for game sounds, each showing a percentage.
+* The music changes volume live as the slider moves. Letting go of the game sounds slider plays a sample thump at the new level.
+* Opening the panel counts as a user gesture, so it unlocks audio and starts the music. That is what makes the live preview possible before the game has started.
+* Both levels are saved in the browser. At the default positions the mix plays exactly as it was balanced in `config.js`.
+* While the panel is open, a backdrop swallows clicks so nothing underneath can be triggered by accident.
+
+#### Verification:
+
+A scripted test on desktop and on a touch screen dragged both sliders to each end, checked the real playback volume, confirmed nothing underneath reacted while the panel was open, and confirmed the levels survive a reload.
+
+### 2.8 Pause Menu, Player Name and Leaderboard
+
+#### Exact Prompts Submitted:
+
+> also a pause button that allows you to do it in game, as well as quit the game button if you wanted to to go back to main menu
+
+> as well as a leaderboard, and in the main menu you get to set your name
+
+#### Implementation Outcome:
+
+* A PAUSE button (also P or Esc) in both Minesweeper and Snake opens a menu with Resume, the two sound sliders and Quit to Menu. The clock stops and the snake freezes while it is open.
+* The pause menu and the start screen's sound settings are one shared piece of code (`UI.soundPanel`), so the sliders behave the same everywhere.
+* A NAME button on the main menu sets the player's name (up to 10 letters or numbers).
+* Every win is recorded with name, time and score. A LEADERBOARD button shows the five fastest wins for each difficulty, and the win screen announces a new best time or the place earned.
+
+#### Agent pushback:
+
+* The student asked for these with under an hour left. Claude agreed to build them but set a hard stop for pushing code, and asked the student to submit the repo link first so a late problem could not cost the assignment.
+* **Limit stated up front:** a leaderboard shared between players needs a server, which a static site does not have. This one is saved in each player's own browser. The game and the README both say so.
+
+#### Verification:
+
+A scripted test set a name, checked the clock and board froze while paused, resumed, quit to the menu from both games, won twice, and confirmed the leaderboard sorted by time, kept only the top five and survived a reload.
+
+### 2.9 Cover Image
+
+> Lets create a cover image for the game, how about a snake eating a bomb on a minesweeper like field, and then BOOM SNAKE written using snakes, and the O's are bombs
+
+* **Outcome:** Claude drew the cover with a Python script, with no image generator involved: the title in a pixel font built from snake segments with bombs for the two O's, above a minefield where a snake is about to bite a bomb. It is `assets/cover.png` and sits at the top of the README. The concept and layout are the student's.
+
 ---
 
 ## 3. Generative Audio & Sound Design Prompts
@@ -429,3 +477,4 @@ Next time I would do everything almost the same, but have Claude give more feedb
 | Phaser 3.90.0 | Game framework | phaser.io | MIT License |
 | Game code | JavaScript | Written with Claude (Cowork), directed by the student | Student's own work |
 | Visuals | Code-drawn shapes | No external image assets | Not applicable |
+| cover.png | Cover image | Drawn by a Python script written with Claude, from the student's concept | Student's own work |
