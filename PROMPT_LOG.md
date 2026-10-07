@@ -266,12 +266,25 @@ Post-processing (done by Claude with ffmpeg, no AI generation): none needed beyo
 
 **3a. Victory**
 
-* **Tool:** ElevenLabs Sound Effects
-* **Exact Prompt:** [TBD]
-* **Settings:** [TBD]
-* **Iterations:** [TBD]
+* **Tool:** ElevenLabs Sound Effects (Sound Effects v2)
 * **Final file:** `assets/audio/victory.mp3`
-* **Trigger in game:** Board cleared, win panel with time taken.
+* **Trigger in game:** Board cleared. It plays as the win panel pops up with the time taken, while a snake crawls across the board eating the mines.
+* **Exact Prompt (the student's own wording, after two typo fixes):**
+
+> Eager final victory, arcade jingle, guitar synth, pattern is dun dun dun dunnnnn, long note on the last dunnnnn, ending on 5 second snake slither sound, no other background noises
+
+The student's first draft, as sent to Claude for review:
+
+> Eager final victory, arcade jingle, Guitar synth, pattern is dun dun dun dunnnnn, long note on the last dunnnnn, ending on 5 secodn snake slither sound. no other backround nosies
+
+* **Human decision:** Claude's starter draft was a chiptune brass fanfare. The student wrote his own around a guitar synth, spelled out the rhythm he wanted, and added a snake slither at the end.
+* **Agent input:** Claude changed nothing in the design. It fixed "secodn", "backround" and "nosies" so the model would not misread them, pointed out that the slither matches the mine-eating snake on the win screen, and warned that the duration had to be raised to about 7 seconds or the slither would be cut off (the same mistake as the first game over round).
+* **Rounds:** two rounds of four takes, 7.1 seconds each, both with this prompt. **Take #2 chosen.**
+
+Post-processing (done by Claude with ffmpeg, no AI generation):
+
+* The audio ends at 5.35 seconds and the remaining 1.7 seconds was silence, so the file was trimmed to 5.55 seconds with a short fade.
+* The peak was at 0.0 dB, so gain was lowered by 2 dB. Converted from WAV to MP3.
 
 **3b. Loss (game over)**
 
@@ -347,7 +360,7 @@ Student prompt 3 (referencing Take 4):
 * **Console error:** `Failed to load resource: the server responded with a status of 404 (File not found)`, five times on every load, one per sound file.
 * **Cause:** the code was written before the ElevenLabs files existed, so `assets/audio/` was empty.
 * **Why it did not break the game:** in Phaser, playing a sound key that is missing from the cache throws an error. Claude anticipated this and routed every sound through a helper that checks `cache.audio.exists(key)` first, so the game stayed fully playable in silence.
-* **Resolution so far:** with the music file added and placeholder tones standing in for the five effects, a scripted playthrough showed zero console errors and every trigger firing in the right order: boom on a bomb, redeem on escape, thump then womp on a Snake crash, boom then womp on the fourth bomb, victory on a win. [TBD: confirm again with the real five files]
+* **Resolution so far:** with the music file added and placeholder tones standing in for the five effects, a scripted playthrough showed zero console errors and every trigger firing in the right order: boom on a bomb, redeem on escape, thump then womp on a Snake crash, boom then womp on the fourth bomb, victory on a win. All five real effect files are now in the repo.
 
 ### Incident 2: Automated playthrough reported the snake dying with 0 apples
 
