@@ -257,14 +257,23 @@ Post-processing (done by Claude with ffmpeg, no AI generation): none needed beyo
 * **Final file:** `assets/audio/victory.mp3`
 * **Trigger in game:** Board cleared, win panel with time taken.
 
-**3b. Loss ("womp womp womp womp")**
+**3b. Loss (game over)**
 
-* **Tool:** ElevenLabs Sound Effects
-* **Exact Prompt:** [TBD]
-* **Settings:** [TBD]
-* **Iterations:** [TBD]
+* **Tool:** ElevenLabs Sound Effects (Sound Effects v2)
 * **Final file:** `assets/audio/womp.mp3`
 * **Trigger in game:** Chained after `thump.mp3` on a Snake crash, and after `boom.mp3` on the fourth bomb.
+* **Exact Prompt (the student's own wording):**
+
+> Arcade game over sound, four main descending sad arcade saxophone notes, additional smaller saxophone string of sound at the end that fizzle out, playful loss, no backround sounds
+
+* **Human decision:** Claude's starter draft used a chiptune trombone and a plain four-note "womp". The student rewrote it around a saxophone and added his own idea of a smaller run of notes that fizzles out after the four main ones.
+* **Round 1** (four takes, 0.5 seconds each): the duration was still set to half a second from the thump, which is too short to fit four notes.
+* **Round 2** (four takes, 2.0 seconds each): same prompt with the duration raised to 2 seconds. **Take #4 chosen.**
+
+Post-processing (done by Claude with ffmpeg, no AI generation):
+
+* **Clipping fix:** the take peaked at 0.0 dB with 184 clipped samples. Gain was lowered by 2 dB, so it now peaks at -2.1 dB.
+* The last 0.2 seconds of silence was trimmed so the game over screen is not waiting on dead air, and the WAV was converted to MP3. Final length 1.9 seconds.
 
 ### 3.4 Background Music Loop
 
