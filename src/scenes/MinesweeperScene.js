@@ -18,6 +18,7 @@ class MinesweeperScene extends Phaser.Scene {
     this.run = State.run;
     this.board = this.run.board;
     this.locked = false;       // true while an explosion or transition plays
+    this.paused = false;       // true while the pause menu is open
     this.flagMode = false;
 
     this.cameras.main.setBackgroundColor(C.bg);
@@ -25,7 +26,7 @@ class MinesweeperScene extends Phaser.Scene {
     this.input.mouse.disableContextMenu();
 
     // ---- HUD ----
-    UI.text(this, W / 2, 30, CONFIG.TITLE + '  /  ' + State.diff().name, 18, C.textDim);
+    UI.text(this, 24, 30, CONFIG.TITLE + '  /  ' + State.diff().name, 16, C.textDim, 0, 0.5);
     UI.text(this, 24, 66, 'SCORE', 12, C.textDim, 0, 0.5);
     this.scoreText = UI.text(this, 24, 90, '0', 24, C.text, 0, 0.5);
     UI.text(this, W / 2, 66, 'TIME', 12, C.textDim);
@@ -37,6 +38,12 @@ class MinesweeperScene extends Phaser.Scene {
     }
     this.minesText = UI.text(this, 24, 128, '', 13, C.textDim, 0, 0.5);
     this.statusText = UI.text(this, W - 24, 128, '', 13, C.textAccent, 1, 0.5);
+
+    // ---- Pause button (also P or Esc) ----
+    const pause = UI.button(this, W - 46, 30, 76, 24, 'PAUSE', () => this.openPause(), C.field);
+    pause.label.setFontSize(12);
+    this.input.keyboard.on('keydown-P', () => this.openPause());
+    this.input.keyboard.on('keydown-ESC', () => this.openPause());
 
     // ---- Board ----
     this.tiles = [];
@@ -78,10 +85,21 @@ class MinesweeperScene extends Phaser.Scene {
 
   update(time, delta) {
     // The clock starts on the first reveal and pauses during transitions.
-    if (!this.locked && this.board.minesPlaced) {
+    if (!this.locked && !this.paused && this.board.minesPlaced) {
       this.run.elapsedMs += delta;
       this.timeText.setText(UI.formatTime(this.run.elapsedMs));
     }
+  }
+
+  // ---------- Pause menu: resume, sound sliders, quit to the main menu ----------
+
+  openPause() {
+    if (this.locked || this.paused) return;
+    this.paused = true;                          // stops the clock; the backdrop blocks the board
+    UI.soundPanel(this, 'PAUSED', [
+      { label: 'RESUME', onClick: () => { this.paused = false; } },
+      { label: 'QUIT TO MENU', onClick: () => this.scene.start('Start'), fill: CONFIG.COLORS.field }
+    ]);
   }
 
   // ---------- Input ----------
@@ -188,9 +206,10 @@ class MinesweeperScene extends Phaser.Scene {
     this.locked = true;
     const coins = State.payoutForWin();
     State.addCoins(coins);
+    const rank = State.recordWin();              // leaderboard place, 0 if outside the top 5
     SFX.play(this.game, 'victory');
     this.time.delayedCall(450, () => {
-      this.scene.start('End', { result: 'win', coinsEarned: coins });
+      this.scene.start('End', { result: 'win', coinsEarned: coins, rank });
     });
   }
 

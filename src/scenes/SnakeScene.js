@@ -57,6 +57,12 @@ class SnakeScene extends Phaser.Scene {
     maskShape.fillRect(S.X - S.WALL, S.Y - S.WALL, fw + S.WALL * 2, fh + S.WALL * 2);
     this.gfx.setMask(maskShape.createGeometryMask());
 
+    // ---- Pause button (also P or Esc) ----
+    const pause = UI.button(this, W / 2 + 34, 28, 76, 24, 'PAUSE', () => this.openPause(), C.field);
+    pause.label.setFontSize(12);
+    this.input.keyboard.on('keydown-P', () => this.openPause());
+    this.input.keyboard.on('keydown-ESC', () => this.openPause());
+
     this.spawnApple();
     this.buildControls();
     this.refreshHud();
@@ -72,6 +78,17 @@ class SnakeScene extends Phaser.Scene {
       this.tweens.add({ targets: card, alpha: 0, duration: 200, onComplete: () => card.destroy() });
       if (this.mode === 'intro') this.mode = 'play';
     });
+  }
+
+  // ---------- Pause menu: resume, sound sliders, quit to the main menu ----------
+
+  openPause() {
+    if (this.mode !== 'play' && this.mode !== 'intro') return;
+    this.mode = 'paused';                        // update() only moves the snake in 'play'
+    UI.soundPanel(this, 'PAUSED', [
+      { label: 'RESUME', onClick: () => { this.tickAcc = 0; this.turnQueue.length = 0; this.mode = 'play'; } },
+      { label: 'QUIT TO MENU', onClick: () => this.scene.start('Start'), fill: CONFIG.COLORS.field }
+    ]);
   }
 
   // ---------- Controls: keyboard, swipe and an on-screen D-pad ----------

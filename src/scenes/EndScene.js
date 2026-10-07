@@ -11,6 +11,7 @@ class EndScene extends Phaser.Scene {
     this.result = data.result;                 // 'win' or 'lose'
     this.reason = data.reason || '';           // 'bombs' or 'snake'
     this.coinsEarned = data.coinsEarned || 0;
+    this.rank = data.rank || 0;                // leaderboard place for a win, 0 if none
   }
 
   create() {
@@ -29,7 +30,10 @@ class EndScene extends Phaser.Scene {
     panel.add(this.add.rectangle(0, 0, 432, 124, C.panel).setStrokeStyle(3, won ? C.good : C.bad));
     if (won) {
       panel.add(UI.text(this, 0, -36, 'BOARD CLEARED!', 28, C.textGood));
-      panel.add(UI.text(this, 0, 2, 'YOUR TIME', 13, C.textDim));
+      const place = this.rank === 1 ? 'NEW BEST TIME, ' + State.playerName + '!'
+        : this.rank ? State.playerName + ': #' + this.rank + ' ON THE LEADERBOARD'
+        : 'YOUR TIME';
+      panel.add(UI.text(this, 0, 2, place, 13, this.rank ? C.textAccent : C.textDim));
       panel.add(UI.text(this, 0, 32, UI.formatTime(run.elapsedMs), 38, C.textAccent));
     } else {
       panel.add(UI.text(this, 0, -30, 'GAME OVER', 36, C.textBad));

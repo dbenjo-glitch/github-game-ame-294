@@ -27,8 +27,12 @@ class StartScene extends Phaser.Scene {
 
     // ---- Sound settings (music and effect volume sliders) ----
     this.settingsOpen = false;
-    const gear = UI.button(this, W - 50, 18, 84, 26, 'SOUND', () => this.openSettings(), C.field);
+    const gear = UI.button(this, W - 46, 16, 76, 24, 'SOUND', () => this.openSettings(), C.field);
     gear.label.setFontSize(12);
+    this.nameButton = UI.button(this, 86, 16, 156, 24, 'NAME: ' + State.playerName, () => this.askName(), C.field);
+    this.nameButton.label.setFontSize(12);
+    const board = UI.button(this, 256, 16, 150, 24, 'LEADERBOARD', () => this.openLeaderboard(), C.field);
+    board.label.setFontSize(12);
 
     // ---- Start gate ----
     const start = UI.button(this, W / 2, 566, 400, 64, 'CLICK OR PRESS SPACE TO START', () => this.startGame(), C.panel);
@@ -44,60 +48,87 @@ class StartScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-ENTER', () => this.startGame());
   }
 
-  // ---- Sound settings panel ----
-  // Opening it counts as a user gesture, so audio is unlocked and the music
-  // starts right away. That lets the player hear the sliders as they move.
+  // ---- Sound settings panel (shared with the in-game pause menu) ----
   openSettings() {
     if (this.settingsOpen || this.started) return;
     this.settingsOpen = true;
-    SFX.unlock(this.game);
-    SFX.startMusic(this.game);
+    UI.soundPanel(this, 'SOUND SETTINGS', [
+      { label: 'DONE', onClick: () => { this.settingsOpen = false; } }
+    ]);
+  }
 
+  // ---- Player name: shown on the leaderboard ----
+  askName() {
+    if (this.settingsOpen || this.started) return;
+    let answer = null;
+    try {
+      answer = window.prompt('Your name for the leaderboard (up to 10 letters or numbers):', State.playerName);
+    } catch (e) { /* some embeds block pop-ups; the name just stays as it is */ }
+    if (answer !== null && State.setName(answer)) {
+      this.nameButton.label.setText('NAME: ' + State.playerName);
+    }
+  }
+
+  // ---- Leaderboard: fastest wins per difficulty, saved in this browser ----
+  openLeaderboard() {
+    if (this.settingsOpen || this.started) return;
+    this.settingsOpen = true;
     const W = CONFIG.WIDTH;
     const H = CONFIG.HEIGHT;
     const C = CONFIG.COLORS;
-    const D = 100;                       // draw above everything on the start screen
-    const cy = H / 2;
-    const parts = [];
-    const keep = (o) => { parts.push(o); return o; };
+    const D = 100;
+    const fixed = [];
+    let rows = [];
+    let tabs = [];
+    const top = H / 2 - 220;
 
-    // Dark backdrop that also swallows clicks meant for the screen underneath.
-    keep(this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.72).setDepth(D).setInteractive());
-    keep(this.add.rectangle(W / 2, cy, 420, 330, C.panel).setStrokeStyle(3, C.accent).setDepth(D + 1));
-    keep(UI.text(this, W / 2, cy - 130, 'SOUND SETTINGS', 22, C.textAccent).setDepth(D + 2));
+    fixed.push(this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.72).setDepth(D).setInteractive());
+    fixed.push(this.add.rectangle(W / 2, H / 2, 440, 440, C.panel).setStrokeStyle(3, C.accent).setDepth(D + 1));
+    fixed.push(UI.text(this, W / 2, top + 34, 'LEADERBOARD', 22, C.textAccent).setDepth(D + 2));
+    fixed.push(UI.text(this, W / 2, top + 58, 'Fastest wins, saved on this device', 12, C.textDim).setDepth(D + 2));
 
-    const pct = (v) => Math.round(v * 100) + '%';
-    const sx = 70;                       // slider left edge
-    const sw = W - 140;                  // slider width
+    const render = (id) => {
+      rows.forEach(o => o.destroy());
+      rows = [];
+      tabs.forEach(({ d, b }) => {
+        const on = d.id === id;
+        b.bg.setStrokeStyle(on ? 3 : 2, on ? C.accent : C.tile).setFillStyle(on ? C.tile : C.field);
+        b.label.setColor(on ? C.textAccent : C.text);
+      });
+      const list = State.scores(id);
+      if (!list.length) {
+        rows.push(UI.text(this, W / 2, top + 230, 'No wins yet on this mode.\nClear a board to get on it.', 15, C.textDim).setDepth(D + 2));
+        return;
+      }
+      list.forEach((e, n) => {
+        const y = top + 152 + n * 42;
+        const color = n === 0 ? C.textAccent : C.text;
+        rows.push(UI.text(this, 44, y, (n + 1) + '.', 18, color, 0, 0.5).setDepth(D + 2));
+        rows.push(UI.text(this, 78, y, e.name, 18, color, 0, 0.5).setDepth(D + 2));
+        rows.push(UI.text(this, 290, y, UI.formatTime(e.timeMs), 18, color, 1, 0.5).setDepth(D + 2));
+        rows.push(UI.text(this, W - 44, y, e.score + ' pts', 14, C.textDim, 1, 0.5).setDepth(D + 2));
+      });
+    };
 
-    keep(UI.text(this, sx, cy - 82, 'MUSIC', 15, C.text, 0, 0.5).setDepth(D + 2));
-    const musicPct = keep(UI.text(this, sx + sw, cy - 82, pct(State.musicLevel), 15, C.textAccent, 1, 0.5).setDepth(D + 2));
-    const musicSlider = UI.slider(this, sx, cy - 48, sw, State.musicLevel, (v) => {
-      SFX.setMusicLevel(v);
-      musicPct.setText(pct(v));
-    }, () => State.save(), D + 2);
+    CONFIG.DIFFICULTIES.forEach((d, n) => {
+      const b = UI.button(this, 84 + n * 104, top + 98, 96, 36, d.short, () => render(d.id), C.field);
+      b.label.setFontSize(13);
+      b.bg.setDepth(D + 2);
+      b.label.setDepth(D + 3);
+      tabs.push({ d, b });
+    });
 
-    keep(UI.text(this, sx, cy + 8, 'GAME SOUNDS', 15, C.text, 0, 0.5).setDepth(D + 2));
-    const sfxPct = keep(UI.text(this, sx + sw, cy + 8, pct(State.sfxLevel), 15, C.textAccent, 1, 0.5).setDepth(D + 2));
-    const sfxSlider = UI.slider(this, sx, cy + 42, sw, State.sfxLevel, (v) => {
-      SFX.setSfxLevel(v);
-      sfxPct.setText(pct(v));
-    }, () => {
-      State.save();
-      SFX.play(this.game, 'thump');      // a quick sample at the new level
-    }, D + 2);
-    keep(UI.text(this, W / 2, cy + 78, 'Let go of the slider to hear a sample.', 12, C.textDim).setDepth(D + 2));
-
-    const close = UI.button(this, W / 2, cy + 124, 180, 46, 'DONE', () => {
-      musicSlider.destroy();
-      sfxSlider.destroy();
-      parts.forEach(o => o.destroy());
+    const close = UI.button(this, W / 2, top + 396, 200, 46, 'CLOSE', () => {
+      rows.forEach(o => o.destroy());
+      tabs.forEach(({ b }) => { b.bg.destroy(); b.label.destroy(); });
+      fixed.forEach(o => o.destroy());
+      close.bg.destroy();
+      close.label.destroy();
       this.settingsOpen = false;
     });
     close.bg.setDepth(D + 2);
     close.label.setDepth(D + 3);
-    keep(close.bg);
-    keep(close.label);
+    render(State.difficulty);
   }
 
   // ---- Difficulty: board size, mine count and snake speed ----
