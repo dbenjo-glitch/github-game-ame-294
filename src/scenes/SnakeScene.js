@@ -1,6 +1,8 @@
 // SnakeScene.js
 // The redemption game. The player lands here after hitting a bomb and must
 // eat the target number of apples (10, 20 or 30) to get back to Minesweeper.
+// The snake's starting speed comes from the difficulty, and it gets 5% faster
+// for every 5 seconds spent in here.
 //   REWARD  points per apple, then the "redeemed" escape through the wall
 //   DAMAGE  hitting a wall or your own tail: thump, then womp
 //   END     dying here ends the whole run
@@ -18,6 +20,10 @@ class SnakeScene extends Phaser.Scene {
     this.apples = 0;
     this.mode = 'intro';                                         // intro, play, exit, dead
     this.tickAcc = 0;
+    this.baseTick = State.diff().snakeTick;                      // set by difficulty
+    this.tickMs = this.baseTick;                                 // shrinks as the snake speeds up
+    this.playMs = 0;                                             // time spent actually playing
+    this.speedLevel = 0;                                         // number of 5% speed-ups so far
     this.dir = { x: 1, y: 0 };
     this.turnQueue = [];                                         // buffered turns, max 2
     const midRow = Math.floor(S.ROWS / 2);
@@ -32,6 +38,7 @@ class SnakeScene extends Phaser.Scene {
     UI.text(this, 24, 28, 'REDEMPTION ' + this.level + ' OF ' + CONFIG.REDEMPTION_TARGETS.length, 16, C.textAccent, 0, 0.5);
     this.scoreText = UI.text(this, W - 24, 28, '', 16, C.text, 1, 0.5);
     this.appleText = UI.text(this, W / 2, 68, '', 28, C.text);
+    this.speedText = UI.text(this, W - 24, 52, 'SPEED x1.00', 12, C.textDim, 1, 0.5);
     // Progress bar toward the apple target.
     this.add.rectangle(W / 2, 94, 432, 8, C.tileOpen);
     this.bar = this.add.rectangle(24, 94, 0, 8, C.good).setOrigin(0, 0.5);
@@ -57,10 +64,10 @@ class SnakeScene extends Phaser.Scene {
 
     // ---- Intro card ----
     const card = this.add.container(W / 2, S.Y + fh / 2).setDepth(30);
-    card.add(this.add.rectangle(0, 0, 360, 130, C.panel, 0.95).setStrokeStyle(3, C.bad));
+    card.add(this.add.rectangle(0, 0, 400, 130, C.panel, 0.95).setStrokeStyle(3, C.bad));
     card.add(UI.text(this, 0, -30, 'YOU HIT A BOMB', 24, C.textBad));
     card.add(UI.text(this, 0, 8, 'EAT ' + this.target + ' APPLES TO GET BACK', 17, C.text));
-    card.add(UI.text(this, 0, 38, 'Crash and the run is over.', 13, C.textDim));
+    card.add(UI.text(this, 0, 38, 'Crash and the run is over. It speeds up every 5s.', 13, C.textDim));
     this.time.delayedCall(1700, () => {
       this.tweens.add({ targets: card, alpha: 0, duration: 200, onComplete: () => card.destroy() });
       if (this.mode === 'intro') this.mode = 'play';
@@ -122,9 +129,11 @@ class SnakeScene extends Phaser.Scene {
     const S = CONFIG.SNAKE;
     if (this.mode === 'play') {
       this.run.elapsedMs += delta;
+      this.playMs += delta;
+      this.updateSpeed();
       this.tickAcc += delta;
-      while (this.tickAcc >= S.TICK_MS && this.mode === 'play') {
-        this.tickAcc -= S.TICK_MS;
+      while (this.tickAcc >= this.tickMs && this.mode === 'play') {
+        this.tickAcc -= this.tickMs;
         this.step();
       }
     } else if (this.mode === 'exit') {
@@ -134,6 +143,19 @@ class SnakeScene extends Phaser.Scene {
         this.exitStep();
       }
     }
+  }
+
+  // Every 5 seconds of play the snake gets 5% faster. It compounds, so 20
+  // seconds in is 1.05 x 1.05 x 1.05 x 1.05 = about 1.22 times the start speed.
+  updateSpeed() {
+    const S = CONFIG.SNAKE;
+    const level = Math.floor(this.playMs / S.SPEEDUP_EVERY_MS);
+    if (level === this.speedLevel) return;
+    this.speedLevel = level;
+    this.tickMs = Math.max(S.MIN_TICK_MS, this.baseTick / Math.pow(S.SPEEDUP_FACTOR, level));
+    const mult = this.baseTick / this.tickMs;
+    this.speedText.setText('SPEED x' + mult.toFixed(2)).setColor(CONFIG.COLORS.textAccent);
+    this.tweens.add({ targets: this.speedText, scale: 1.35, duration: 120, yoyo: true });
   }
 
   step() {

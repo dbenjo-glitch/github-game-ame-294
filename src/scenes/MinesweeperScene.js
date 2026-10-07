@@ -25,7 +25,7 @@ class MinesweeperScene extends Phaser.Scene {
     this.input.mouse.disableContextMenu();
 
     // ---- HUD ----
-    UI.text(this, W / 2, 30, CONFIG.TITLE, 18, C.textDim);
+    UI.text(this, W / 2, 30, CONFIG.TITLE + '  /  ' + State.diff().name, 18, C.textDim);
     UI.text(this, 24, 66, 'SCORE', 12, C.textDim, 0, 0.5);
     this.scoreText = UI.text(this, 24, 90, '0', 24, C.text, 0, 0.5);
     UI.text(this, W / 2, 66, 'TIME', 12, C.textDim);
@@ -40,16 +40,16 @@ class MinesweeperScene extends Phaser.Scene {
 
     // ---- Board ----
     this.tiles = [];
-    const T = CONFIG.TILE;
+    const T = UI.grid().tile;       // shrinks as the board grows with difficulty
     for (let i = 0; i < this.board.cells.length; i++) {
       const col = Board.col(this.board, i);
       const row = Board.row(this.board, i);
       const p = UI.tileCenter(col, row);
       const rect = this.add.rectangle(p.x, p.y, T - 4, T - 4, C.tile);
       rect.setInteractive({ useHandCursor: true });
-      const label = UI.text(this, p.x, p.y, '', 26);
-      const mine = UI.mine(this, p.x, p.y, 11).setVisible(false);
-      const flag = UI.flag(this, p.x - 2, p.y + 2, 13).setVisible(false);
+      const label = UI.text(this, p.x, p.y, '', Math.round(T * 0.48));
+      const mine = UI.mine(this, p.x, p.y, Math.round(T * 0.2)).setVisible(false);
+      const flag = UI.flag(this, p.x - 2, p.y + 2, Math.round(T * 0.24)).setVisible(false);
       rect.on('pointerover', () => this.hover(i, true));
       rect.on('pointerout', () => this.hover(i, false));
       rect.on('pointerdown', (pointer) => this.tapTile(i, pointer));

@@ -42,7 +42,7 @@ class EndScene extends Phaser.Scene {
 
     // ---- Stats and buttons below the board ----
     const used = Math.min(run.bombsHit, CONFIG.REDEMPTION_TARGETS.length);
-    UI.text(this, W / 2, 606, 'SCORE ' + run.score + '    REDEMPTIONS USED ' + used + '/' + CONFIG.REDEMPTION_TARGETS.length, 14, C.text);
+    UI.text(this, W / 2, 606, State.diff().name + '   SCORE ' + run.score + '   REDEMPTIONS USED ' + used + '/' + CONFIG.REDEMPTION_TARGETS.length, 14, C.text);
     if (won) {
       UI.text(this, W / 2, 630, '+' + this.coinsEarned + ' COINS   (TOTAL ' + State.coins + ')', 15, C.textAccent);
     } else {
@@ -67,7 +67,7 @@ class EndScene extends Phaser.Scene {
   // The finished board, drawn dim, with every mine showing.
   drawBoard(board, won) {
     const C = CONFIG.COLORS;
-    const T = CONFIG.TILE;
+    const T = UI.grid().tile;
     board.cells.forEach((cell, i) => {
       const p = UI.tileCenter(Board.col(board, i), Board.row(board, i));
       let fill = C.tileOpen;
@@ -75,9 +75,9 @@ class EndScene extends Phaser.Scene {
       else if (!cell.revealed && !cell.mine) fill = C.tile;
       this.add.rectangle(p.x, p.y, T - 4, T - 4, fill).setAlpha(0.85);
       if (cell.mine) {
-        this.mineIcons[i] = UI.mine(this, p.x, p.y, 11);
+        this.mineIcons[i] = UI.mine(this, p.x, p.y, Math.round(T * 0.2));
       } else if (cell.revealed && cell.adjacent > 0) {
-        UI.text(this, p.x, p.y, String(cell.adjacent), 26, CONFIG.NUMBER_COLORS[cell.adjacent]).setAlpha(won ? 0.35 : 0.6);
+        UI.text(this, p.x, p.y, String(cell.adjacent), Math.round(T * 0.48), CONFIG.NUMBER_COLORS[cell.adjacent]).setAlpha(won ? 0.35 : 0.6);
       }
     });
   }
@@ -86,7 +86,8 @@ class EndScene extends Phaser.Scene {
   // nearest-next route, eats each one, then leaves off the right edge.
   startMineEater(board) {
     const N = board.size;
-    const T = CONFIG.TILE;
+    const G = UI.grid();
+    const T = G.tile;
     const mines = Board.mineIndexes(board).map(i => ({ i, c: Board.col(board, i), r: Board.row(board, i) }));
     if (!mines.length) return;
 
@@ -112,7 +113,7 @@ class EndScene extends Phaser.Scene {
 
     const gfx = this.add.graphics().setDepth(10);
     const maskShape = this.make.graphics();
-    maskShape.fillRect(CONFIG.GRID_X, CONFIG.GRID_Y, N * T, N * T);
+    maskShape.fillRect(G.x, G.y, N * T, N * T);
     gfx.setMask(maskShape.createGeometryMask());
 
     const color = State.skin().color;
@@ -144,12 +145,13 @@ class EndScene extends Phaser.Scene {
         for (let k = body.length - 1; k >= 0; k--) {
           const p = UI.tileCenter(body[k].c, body[k].r);
           gfx.fillStyle(color, k === 0 ? 1 : 0.8);
-          gfx.fillRoundedRect(p.x - T / 2 + 5, p.y - T / 2 + 5, T - 10, T - 10, 10);
+          const inset = T * 0.1;
+          gfx.fillRoundedRect(p.x - T / 2 + inset, p.y - T / 2 + inset, T - inset * 2, T - inset * 2, T * 0.18);
         }
         const h = UI.tileCenter(body[0].c, body[0].r);
         gfx.fillStyle(0x0b0d1c, 1);
-        gfx.fillCircle(h.x - 8, h.y - 6, 4);
-        gfx.fillCircle(h.x + 8, h.y - 6, 4);
+        gfx.fillCircle(h.x - T * 0.15, h.y - T * 0.11, T * 0.075);
+        gfx.fillCircle(h.x + T * 0.15, h.y - T * 0.11, T * 0.075);
       }
     });
   }
