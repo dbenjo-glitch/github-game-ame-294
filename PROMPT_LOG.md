@@ -5,7 +5,7 @@
 **Student Name:** David Benjo
 **Project Title:** Boom Snake
 **Repository URL:** https://github.com/dbenjo-glitch/github-game-ame-294
-**Itch.io URL (Optional Bonus):** [TBD]
+**Itch.io URL (Optional Bonus):** Not published
 
 ---
 
@@ -399,13 +399,20 @@ Student prompt 3 (referencing Take 4):
 * **Diagnosis:** the test slowed the snake by setting a config value that the difficulty change had just removed, so the snake ran at full speed and hit the wall before the test could swipe. The game was fine.
 * **Resolution:** the test was updated to slow the snake through the new difficulty settings. All tests passed.
 
-### Incident 8: [TBD from the student's own playtest]
 
 ---
 
 ## 5. Human-in-the-Loop Curation & Analytical Reflection
 
-[200 to 300 words, to be written from the student's own notes]
+I was a bit surprised by how easy it was to build a game like this. I have never coded in my life, but here I am on GitHub publishing a game with awesome sounds that I had a direct hand in making. It's like I got to be creative without needing to learn all the hard steps to achieve what I want. The bridge from where I am to my goals, one of which was to make something cool like this with code, got a lot shorter.
+
+I overruled the AI a few times, especially when making the sounds. For most of my sounds the AI assist was at 40 to 50%, but on the victory sound I got results I didn't envision or like from putting it at 100%. So I turned it down to 0% as an experiment, and that was my favorite sound. Though it sounded less refined, it sounded more like my vision.
+
+I also overruled my Claude agent on the rules. I set it up to give feedback on my ideas, and one time it pushed back on the amount of apples you need to collect in Snake. I kept it as is, while also adding even more difficulty, which gave the game more of the feel I was looking for. I also chose not to use Claude's ElevenLabs prompts. I scrapped them for a template which I filled in how I liked.
+
+The AI was not always right either: once it said the game was live when its uploads had failed and the page was blank.
+
+Next time I would do everything almost the same, but have Claude give more feedback to improve more. I would be better at all of this, and I think it would only take 70% of the time.
 
 ---
 
