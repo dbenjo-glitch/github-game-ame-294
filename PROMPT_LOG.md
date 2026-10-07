@@ -130,6 +130,35 @@ The audio behavior was specified in the 2.2 prompt above ("a thump and then a ar
 * **Outcome:** Claude read the student's ElevenLabs Sound Effects history and Chat thread and reconstructed the full prompt chain (section 3.4).
 * **Implementation Outcome:** `audio.js` gained `SFX.startMusic()`, which loops the track at volume 0.22 so it sits under the effects. It is started from the same click that unlocks audio and is owned by the game's sound manager, so it keeps playing across every scene change. A guard makes sure only one copy ever plays.
 
+### 2.6 Difficulty Modes and Snake Speed-Up
+
+#### Exact Prompt Submitted:
+
+> okay, im producing the rest of the sounds. make it so we have an easy, medium, hard, and ultra hard mode. for the hard mode increase the size of the area as well for minesweeper, and for ultra hard increase it even more. as well as make the snake faster corresponding with what difficulty they play with. also make it so the snake speeds up for every 5 second youre in the snake game by 5%
+
+#### Implementation Outcome:
+
+| Mode | Board | Mines | Snake step time |
+| :---- | :---- | :---- | :---- |
+| Easy | 8x8 | 8 | 150 ms (slow) |
+| Medium | 8x8 | 10 | 125 ms (the original game) |
+| Hard | 10x10 | 18 | 105 ms |
+| Ultra Hard | 12x12 | 30 | 90 ms |
+
+* A difficulty picker was added to the start screen. The choice is saved in the browser.
+* The board always fills the same square on screen, so tiles shrink as the board grows (54, 43 and 36 pixels). Numbers, mines, flags and the win-screen snake all scale with the tile.
+* In Snake, the step time is divided by 1.05 for every 5 seconds of play. It compounds, and a "SPEED x1.05" readout in the HUD pulses each time it rises. The timer resets on each new redemption.
+* All of it is data in `config.js` (`DIFFICULTIES`, `SPEEDUP_EVERY_MS`, `SPEEDUP_FACTOR`), so rebalancing means editing numbers, not code.
+
+#### Decisions the agent made that the student did not specify:
+
+* **Mine counts.** The student asked for bigger boards, not for mine counts. Claude chose densities that rise with difficulty (12.5%, 15.6%, 18% and 20.8% of tiles), close to the classic beginner, intermediate and expert ratios.
+* **A speed ceiling.** Compounding 5% forever would make a 30 apple redemption on Ultra Hard physically unplayable, so the step time never drops below 55 ms. This is flagged to the student as a number to tune after playtesting.
+
+#### Verification:
+
+A scripted browser test picked each mode in turn and confirmed the board size, mine count, starting snake speed, the exact 5% step after 5 seconds, the ceiling, a full win on every board size, and that the choice survives a page reload.
+
 ---
 
 ## 3. Generative Audio & Sound Design Prompts
@@ -177,12 +206,45 @@ Post-processing (done by Claude with ffmpeg, no AI generation):
 
 **2b. Snake crash**
 
-* **Tool:** ElevenLabs Sound Effects
-* **Exact Prompt:** [TBD]
-* **Settings:** [TBD]
-* **Iterations:** [TBD]
+* **Tool:** ElevenLabs Sound Effects (Sound Effects v2)
 * **Final file:** `assets/audio/thump.mp3`
-* **Trigger in game:** Snake hits a wall or its own body.
+* **Trigger in game:** Snake hits a wall or its own body. `womp.mp3` is chained to play the moment it ends.
+
+This sound took five rounds of four takes each (20 takes). All prompts are the student's exact wording from his ElevenLabs history, oldest first.
+
+How the first prompt was built. Claude supplied the template `Single [weight] [impact word] of [what is hitting] against [surface], [tone], [length], no [exclude]`. The student filled it in and asked about one slot:
+
+> Single medium weight dull bump of snake head against concrete wall with slight reverb, tone, [length], no backround sound
+>
+> i dont understand the tone part,
+
+* Claude explained tone as the pitch and color of the sound and offered three options. The student replied "low and muffled", then changed it to "medium and sharp" himself before generating.
+* Claude warned that "slight reverb" adds a tail, and that a long tail would delay the womp that follows.
+
+**Round 1** (four takes, 2.3 seconds each):
+
+> Single medium weight dull bump of snake head against concrete wall with slight reverb, retro arcade sound, medium and sharp, very short, no background sound
+
+**Round 2** (four takes, 2.3 seconds each). Added an instruction to stop extra noises after the hit:
+
+> Single medium weight dull bump of snake head against concrete wall with slight reverb, retro arcade sound, medium and sharp, very short, no background sound, just 1 sound, no secondary sound
+
+**Round 3** (four takes, 3.0 seconds each). Generated with ElevenLabs' "Similar effects" feature, which wrote its own prompt:
+
+> A soft, dull thudding impact.
+
+**Round 4** (four takes, 0.5 seconds each). Duration set to half a second, weight raised to "heavy", "snake head" simplified to "a head", and "dull" changed to "sharp":
+
+> Single heavy weight sharp bump of a head against concrete wall with slight reverb, retro arcade sound, medium and sharp, very short, no background sound, just 1 sound, no secondary sound
+
+**Round 5** (four takes, 0.5 seconds each). "sharp bump" changed back to "dull bump":
+
+> Single heavy weight dull bump of a head against concrete wall with slight reverb, retro arcade sound, medium and sharp, very short, no background sound, just 1 sound, no secondary sound
+
+* **Chosen:** take #1 of a "Single heavy weight" round, 0.48 seconds. [Student to confirm it is from round 5 and not round 4. The file name is the same for both.]
+* **What fixed it:** the first three rounds ran 2.3 to 3 seconds, far too long for a sound that has to finish before the womp. Forcing the duration to 0.5 seconds did more than any wording change.
+
+Post-processing (done by Claude with ffmpeg, no AI generation): none needed beyond format. The take starts instantly, peaks at -4.7 dB with no clipping, and has died away by 0.4 seconds. It was converted from WAV to MP3 with a 0.06 second fade at the very end.
 
 ### 3.3 Sound 3: End State SFX (two sounds)
 
@@ -285,7 +347,21 @@ Student prompt 3 (referencing Take 4):
 * **Symptom:** the chosen take ended with 0.18 seconds of silence, and MP3 files add a little padding of their own, so a straight loop would stutter every 19 seconds.
 * **Resolution:** trimmed to exactly 11 bars (18.857 seconds) and shipped as OGG with an MP3 fallback. See section 3.4.
 
-### Incident 6: [TBD from the student's own playtest]
+### Incident 6: Pushes to GitHub failed silently, and the live game was blank
+
+* **Symptom:** the commit history was missing four commits that Claude believed it had made, including the one with all five scene files. The GitHub Pages link served a page that could not start.
+* **Cause:** Claude was committing through the GitHub web upload page. A commit message longer than 50 characters makes GitHub show a tip banner that pushes the Commit button down the page, so the click landed on empty space. Nothing reported an error.
+* **How it was caught:** by reading the commit list after a push instead of assuming it worked.
+* **Resolution:** every file was pushed again with short commit messages, and each push is now confirmed against the repo before moving on. The live site was then loaded and checked directly.
+* **Takeaway:** an agent reporting "done" is not evidence. The check has to be against the real system.
+
+### Incident 7: Another failure that was the test's fault
+
+* **Symptom:** after the difficulty change, the touch-control test reported `swipe failed ['dead', ...]`.
+* **Diagnosis:** the test slowed the snake by setting a config value that the difficulty change had just removed, so the snake ran at full speed and hit the wall before the test could swipe. The game was fine.
+* **Resolution:** the test was updated to slow the snake through the new difficulty settings. All tests passed.
+
+### Incident 8: [TBD from the student's own playtest]
 
 ---
 

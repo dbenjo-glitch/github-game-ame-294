@@ -26,6 +26,19 @@ Student: David Benjo
 
 Reach the target and a hole opens in the wall. Your snake escapes through it and you are back on your Minesweeper board. Crash into a wall or yourself and the run ends.
 
+### Difficulty
+
+Pick a mode on the start screen. Harder modes mean a bigger board, denser mines and a faster snake.
+
+| Mode | Board | Mines | Snake |
+|---|---|---|---|
+| Easy | 8x8 | 8 | Slow |
+| Medium | 8x8 | 10 | Normal |
+| Hard | 10x10 | 18 | Fast |
+| Ultra Hard | 12x12 | 30 | Very fast |
+
+In every mode the snake gets 5% faster for every 5 seconds you spend in Snake, so stalling costs you.
+
 ### Controls
 
 | | Desktop | Mobile |
@@ -68,7 +81,7 @@ Audio starts after the first click or key press, as browsers require.
 ```
 index.html                  entry point
 lib/phaser.min.js           Phaser 3 (MIT)
-src/config.js               every tunable number: board size, apple targets, prices, volumes
+src/config.js               every tunable number: difficulty modes, apple targets, speed-up, prices, volumes
 src/state.js                shared run state, so the board survives the trip into Snake
 src/board.js                Minesweeper rules, no drawing
 src/audio.js                loading, playing and chaining the sound effects
