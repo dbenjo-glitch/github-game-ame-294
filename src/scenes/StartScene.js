@@ -25,6 +25,11 @@ class StartScene extends Phaser.Scene {
     this.buildDifficulty();
     this.buildShop();
 
+    // ---- Sound settings (music and effect volume sliders) ----
+    this.settingsOpen = false;
+    const gear = UI.button(this, W - 50, 18, 84, 26, 'SOUND', () => this.openSettings(), C.field);
+    gear.label.setFontSize(12);
+
     // ---- Start gate ----
     const start = UI.button(this, W / 2, 566, 400, 64, 'CLICK OR PRESS SPACE TO START', () => this.startGame(), C.panel);
     start.bg.setStrokeStyle(3, C.accent);
@@ -35,8 +40,64 @@ class StartScene extends Phaser.Scene {
     UI.text(this, W / 2, 650, 'Snake: arrow keys, WASD, swipe, or the D-pad.', 12, C.textDim);
     UI.text(this, W / 2, 670, 'The snake gets 5% faster every 5 seconds.', 12, C.textDim);
 
-    this.input.keyboard.once('keydown-SPACE', () => this.startGame());
-    this.input.keyboard.once('keydown-ENTER', () => this.startGame());
+    this.input.keyboard.on('keydown-SPACE', () => this.startGame());
+    this.input.keyboard.on('keydown-ENTER', () => this.startGame());
+  }
+
+  // ---- Sound settings panel ----
+  // Opening it counts as a user gesture, so audio is unlocked and the music
+  // starts right away. That lets the player hear the sliders as they move.
+  openSettings() {
+    if (this.settingsOpen || this.started) return;
+    this.settingsOpen = true;
+    SFX.unlock(this.game);
+    SFX.startMusic(this.game);
+
+    const W = CONFIG.WIDTH;
+    const H = CONFIG.HEIGHT;
+    const C = CONFIG.COLORS;
+    const D = 100;                       // draw above everything on the start screen
+    const cy = H / 2;
+    const parts = [];
+    const keep = (o) => { parts.push(o); return o; };
+
+    // Dark backdrop that also swallows clicks meant for the screen underneath.
+    keep(this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.72).setDepth(D).setInteractive());
+    keep(this.add.rectangle(W / 2, cy, 420, 330, C.panel).setStrokeStyle(3, C.accent).setDepth(D + 1));
+    keep(UI.text(this, W / 2, cy - 130, 'SOUND SETTINGS', 22, C.textAccent).setDepth(D + 2));
+
+    const pct = (v) => Math.round(v * 100) + '%';
+    const sx = 70;                       // slider left edge
+    const sw = W - 140;                  // slider width
+
+    keep(UI.text(this, sx, cy - 82, 'MUSIC', 15, C.text, 0, 0.5).setDepth(D + 2));
+    const musicPct = keep(UI.text(this, sx + sw, cy - 82, pct(State.musicLevel), 15, C.textAccent, 1, 0.5).setDepth(D + 2));
+    const musicSlider = UI.slider(this, sx, cy - 48, sw, State.musicLevel, (v) => {
+      SFX.setMusicLevel(v);
+      musicPct.setText(pct(v));
+    }, () => State.save(), D + 2);
+
+    keep(UI.text(this, sx, cy + 8, 'GAME SOUNDS', 15, C.text, 0, 0.5).setDepth(D + 2));
+    const sfxPct = keep(UI.text(this, sx + sw, cy + 8, pct(State.sfxLevel), 15, C.textAccent, 1, 0.5).setDepth(D + 2));
+    const sfxSlider = UI.slider(this, sx, cy + 42, sw, State.sfxLevel, (v) => {
+      SFX.setSfxLevel(v);
+      sfxPct.setText(pct(v));
+    }, () => {
+      State.save();
+      SFX.play(this.game, 'thump');      // a quick sample at the new level
+    }, D + 2);
+    keep(UI.text(this, W / 2, cy + 78, 'Let go of the slider to hear a sample.', 12, C.textDim).setDepth(D + 2));
+
+    const close = UI.button(this, W / 2, cy + 124, 180, 46, 'DONE', () => {
+      musicSlider.destroy();
+      sfxSlider.destroy();
+      parts.forEach(o => o.destroy());
+      this.settingsOpen = false;
+    });
+    close.bg.setDepth(D + 2);
+    close.label.setDepth(D + 3);
+    keep(close.bg);
+    keep(close.label);
   }
 
   // ---- Difficulty: board size, mine count and snake speed ----
@@ -126,7 +187,7 @@ class StartScene extends Phaser.Scene {
   }
 
   startGame() {
-    if (this.started) return;
+    if (this.started || this.settingsOpen) return;
     this.started = true;
     SFX.unlock(this.game);          // resume the Web Audio context on this user gesture
     SFX.startMusic(this.game);      // background loop starts only after that gesture
